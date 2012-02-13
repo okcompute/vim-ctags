@@ -63,7 +63,7 @@ x 		- delete le charactere en dessous du curseur
  modification
 ================================================================
 r 		- remplacer le charactere sous le curseur
-r 		- remplacer les characteres a partir du curseur
+R 		- remplacer les characteres a partir du curseur
 
 ================================================================
  undo/redo
