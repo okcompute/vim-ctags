@@ -8,6 +8,7 @@ if has('win32') || has ('win64')
 	source $VIMRUNTIME/mswin.vim
 	behave mswin
 
+
 set diffexpr=MyDiff()
 function MyDiff()
   let opt = '-a --binary '
