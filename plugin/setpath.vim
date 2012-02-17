@@ -9,21 +9,16 @@
 
 " Create a list of projectPath project
 
-
-"\ ['D:/perforce_pop/assassin/ac/dev/tools/ExternalPackagesAddons/config/Source', 'Python', 'DeployEpa.py'],
-"\ ['D:/perforce_pop/assassin/ac/dev/tools/ExternalPackagesAddons/config/Launcher', 'Python', 'MobuLauncher.pyw'],
-"\ ['D:/perforce_pop/assassin/ac/dev/tools/ExternalPackagesAddons/packages/MotionBuilder/2010/Common/Scripts', 'Python', ''],
-"\ ['D:/perforce_pop/assassin/ac/dev/tools/ExternalPackagesAddons/common/python', 'Python', '']
-
 let projectList = [
-\ ['~/Developer/Git/VirtualLifeDrawing', 'CSharp', '']
+\ ['~/Developer/Git/VirtualLifeDrawing', 'CSharp', ''],
+\ ['~/Developer/Git/OkBudgetDesktop', 'ObjectiveC', '']
 \ ]
    
 " Ctags commands associated to language
 let ctagsCommand = {
             \ 'CSharp'              : 'ctags -R --languages=c\# --c\#-kinds=+l *',
-            \ 'ObjectiveC'          : 'C:\cygwin\bin\ctags -R *',
-            \ "Python"              : 'C:\cygwin\bin\ctags -R --languages=Python --Python-kinds=-i *'
+            \ 'ObjectiveC'          : 'ctags -R *',
+            \ "Python"              : 'ctags -R --languages=Python --Python-kinds=-i *'
             \ }
 
 " This fucntion take the current file directory

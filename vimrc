@@ -254,4 +254,27 @@ let g:netrw_list_hide= '.*\.swp$,.*\.pyc$'
 set tags=./tags;
 
 " Pydoc script location
-let g:pydoc_cmd = "python D:/perforce_pop/assassin/ac/dev/tools/ExternalPackagesAddons/common/Python26/Tools/scripts/pydoc"
+let g:pydoc_cmd = "python pydoc"
+
+"-----------------------------------------------------------------------------
+" Clang_complete
+"-----------------------------------------------------------------------------
+" Blocks are not enabled by default in clang. Cocoa frameworks use them
+" extensively.
+let g:clang_user_options='-fblocks'
+
+" Complete options (disable preview scratch window)
+set completeopt=menu,menuone,longest
+ 
+" Limit popup menu height
+set pumheight=15
+ 
+" SuperTab option for context aware completion
+let g:SuperTabDefaultCompletionType = "context"
+
+" Disable auto popup, use <Tab> to autocomplete
+let g:clang_complete_auto = 0
+
+" Show clang errors in the quickfix window
+let g:clang_complete_copen = 1
+
