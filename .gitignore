@@ -5,3 +5,4 @@ doc/tags
 *.DS_Store
 *.vim~
 *.swp
+.VimballRecord
