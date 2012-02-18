@@ -4,23 +4,23 @@ Liste des commandes que je dois savoir pour avancer avec Vim
 ================================================================
  Deplacement :
 ================================================================
-hjkl    	    - Deplacement par character
+hjkl            - Deplacement par character
 w               - Deplacement au debut du mot
 W               - Deplace au debut du prochain mot separe par un espace
 e               - Deplacement a la fin d'un mot
 E               - Deplace a la fin d'un mot separe par un espace
 ge              - Deplacement a la fin du mot precedent
 gE              - Deplacement a la fin du mot precednt separe par un espace
-ctrl-u              - Deplacement d'une demi-page vers le haut
-ctrl-d              - Deplacement d'une demi-page vers le bas
+ctrl-u          - Deplacement d'une demi-page vers le haut
+ctrl-d          - Deplacement d'une demi-page vers le bas
 g; 		- va au dernier changement fait dans le ficher. Le prochain appel ramene au precedent, etc.
 g, 		- va au changement precedent. Ne fait rien si on a pas fait g;
 h 		- deplace le curseur en haut de l'ecran
 m 		- deplace le curseur au milieu de l'ecran
 l 		- deplace le curseur a la fin de l'ecran
-<line number>g - se deplacer a ligne
-f<char>       - deplacer au prochain apparition de <char>
-t<char>       - deplacer juste avant l'apparition du <char>
+<line number>g  - se deplacer a ligne
+f<char>         - deplacer au prochain apparition de <char>
+t<char>         - deplacer juste avant l'apparition du <char>
 *               - Trouver tous les mots qui egale le mot en sous du curseur
 g*              - Trouver tous les mots qui contiennent le mot sous le curseur
 n               - Prochain mot trouver suite a une recherche
@@ -29,8 +29,8 @@ N               - Precedent mot trouver suite a une recherche
 g#              - Trouver tous les mots qui contiennent le mot sous le curseur (deplacement inverse)
 n               - Prochain mot trouver suite a une recherche
 N               - Precedent mot trouver suite a une recherche
-[[               - Va au debut de de la fonction precedente
-]]               - Va au debut de de la fonction suivante
+[[              - Va au debut de de la fonction precedente
+]]              - Va au debut de de la fonction suivante
 ''              - Retourne a la position precedente
 0               - Aller au debut de la ligne (position 0)
 ^               - Aller au premier caractere (autre que l'espace) de la ligne 
@@ -39,6 +39,8 @@ f,F             - Chercher le prochain charactere (Maj va de reculons)
 t,T             - Cherchere le prochain charactere et positionner le curseur
 juste avant (Maj va de reculons)
 ;               - Repeter la derniere recherche de charactere
+ctrl-o          - Sauter a la position precedente dans la pile de saut
+ctrl-i          - Sauter a la postion suivante dans la pile de saut
 
 ================================================================
  mode insertion
@@ -71,7 +73,6 @@ R 		- remplacer les characteres a partir du curseur
 u 		- undo la derniere operation
 ctrl-r 		- redo le dernier undo
 
-
 ================================================================
  Visual mode
 ================================================================
@@ -93,15 +94,16 @@ p 		- put ou copie le dernier yank apres le curseur
  effacer
 ================================================================
 x 		- delete le charactere en dessous du curseur
-x 		- delete le charactere juste avant le curseur
-d 		- delete du curseur jusqu'a la fin de la ligne
+X 		- delete le charactere juste avant le curseur
+D 		- delete du curseur jusqu'a la fin de la ligne
 
 ================================================================
  buffer
 ================================================================
 bd          - Fermer le buffer courant (Fait apparaitre le buffer suivant dans la window)
 %bd         - Ferner tous les buffers ouvert
-:b <tab>    - Changer de buffer. Tab passe au travers de la liste de tous les
+bufdo bd    - Ferner tous les buffers ouvert
+b <tab>     - Changer de buffer. Tab passe au travers de la liste de tous les
 buffers ouverts.
 
 ================================================================
@@ -125,3 +127,12 @@ ccl(cclose) - fait disparaitre la fenetre quickfix
   Help system
 ================================================================
 ctrl-T      - Retourner a la position precedente
+
+================================================================
+  Tags
+================================================================
+ctrl-]      - Sauter a l'origine du mot sous le curseur
+ctrl-T      - Reculer d'un cran dans la stack.
+:tag        - Avancer d'un cran dans le stack de tags
+:tags       - Afficher la stack de deplacement dans la tags
+

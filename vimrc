@@ -259,6 +259,7 @@ let g:pydoc_cmd = "python pydoc"
 "-----------------------------------------------------------------------------
 " Clang_complete
 "-----------------------------------------------------------------------------
+
 " Blocks are not enabled by default in clang. Cocoa frameworks use them
 " extensively.
 let g:clang_user_options='-fblocks'
@@ -278,3 +279,9 @@ let g:clang_complete_auto = 0
 " Show clang errors in the quickfix window
 let g:clang_complete_copen = 1
 
+"-----------------------------------------------------------------------------
+" SuperTab plugin
+"-----------------------------------------------------------------------------
+
+" Disable supertab in text file. Was annoying!
+autocmd BufEnter *.txt let b:SuperTabDisabled=1
