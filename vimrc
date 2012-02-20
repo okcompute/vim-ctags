@@ -285,3 +285,9 @@ let g:clang_complete_copen = 1
 
 " Disable supertab in text file. Was annoying!
 autocmd BufEnter *.txt let b:SuperTabDisabled=1
+
+"-----------------------------------------------------------------------------
+" FuzzyFinder plugin
+"-----------------------------------------------------------------------------
+
+nnoremap <silent> ,f :FufFile<CR>
