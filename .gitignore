@@ -1,2 +1,7 @@
 *.swp
 tags
+
+.DS_Store
+.netrwhist
+autoload/.DS_Store
+.VimballRecord
