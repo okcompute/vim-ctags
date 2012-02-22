@@ -3,38 +3,6 @@
 "-----------------------------------------------------------------------------
 set nocompatible
 
-if has('win32') || has ('win64')
-	source $VIMRUNTIME/vimrc_example.vim
-	source $VIMRUNTIME/mswin.vim
-	behave mswin
-
-
-set diffexpr=MyDiff()
-function MyDiff()
-  let opt = '-a --binary '
-  if &diffopt =~ 'icase' | let opt = opt . '-i ' | endif
-  if &diffopt =~ 'iwhite' | let opt = opt . '-b ' | endif
-  let arg1 = v:fname_in
-  if arg1 =~ ' ' | let arg1 = '\"' . arg1 . '\"' | endif
-  let arg2 = v:fname_new
-  if arg2 =~ ' ' | let arg2 = '\"' . arg2 . '\"' | endif
-  let arg3 = v:fname_out
-  if arg3 =~ ' ' | let arg3 = '\"' . arg3 . '\"' | endif
-  let eq = ''
-  if $VIMRUNTIME =~ ' '
-    if &sh =~ '\<cmd'
-      let cmd = '\"' . $VIMRUNTIME . '\diff\"'
-      let eq = '\"\"'
-    else
-      let cmd = substitute($VIMRUNTIME, ' ', '\" ', '') . '\diff\"'
-    endif
-  else
-    let cmd = $VIMRUNTIME . '\diff'
-  endif
-  silent execute '!' . cmd . ' ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3 . eq
-endfunction
-endif
-
 "-----------------------------------------------------------------------------
 " Global Stuff
 "-----------------------------------------------------------------------------
@@ -46,8 +14,8 @@ call pathogen#helptags()
 
 " Set the HOME 
 if has('win32') || has ('win64')
-    "let $HOME = $VIM."/vimfiles"
-    let $HOME = $VIM."d:"
+    let $HOME = $VIM."/vimfiles"
+    "let $HOME = $VIM."d:"
 else
     let $VIMHOME = $HOME."/.vim"
 endif
@@ -210,8 +178,8 @@ if has("mac")
   let g:main_font = "Anonymous\\ Pro:h14"
   let g:small_font = "Anonymous\\ Pro:h2"
 else
-  let g:main_font = "Monospace\\ 9"
-  let g:small_font = "Monospace\\ 2"
+  let g:main_font = "Anonymous\\ Pro:h13"
+  let g:small_font = "Anonymous\\ Pro:h2"
 endif
 
 "-----------------------------------------------------------------------------
@@ -242,7 +210,17 @@ set guioptions-=T
 " Perforce
 let s:IgnoreChange=0
 autocmd! FileChangedRO * nested
+    \ let s:IgnoreChange=1 |
+    \ call system("p4 edit " . expand("%")) |
+    \ set noreadonly
 autocmd! FileChangedShell *
+    \ if 1 == s:IgnoreChange |
+    \   let v:fcs_choice="" |
+    \   let s:IgnoreChange=0 |
+    \ else |
+    \   let v:fcs_choice="ask" |
+    \ endif
+
 
 " Directory. Ignore these files
 let g:netrw_list_hide= '.*\.swp$,.*\.pyc$'
@@ -279,6 +257,15 @@ let g:clang_complete_auto = 0
 " Show clang errors in the quickfix window
 let g:clang_complete_copen = 1
 
+" The quotes at the beggining of clang_exec and at the end of clang_user_options are important, don't remove them
+" They basically trick vim into thinking clang executed fine, because the msvc build autocompletes correctly but fails
+" to compile.
+" Don't forget to put paths with spaces in quotes other wise vim won't be able to execute the command
+if has('win32') || has ('win64')
+let g:clang_exec = '"C:\clang\clang.exe'
+let g:clang_user_options = '2> NUL || exit 0"'
+endif
+
 "-----------------------------------------------------------------------------
 " SuperTab plugin
 "-----------------------------------------------------------------------------
@@ -289,5 +276,10 @@ autocmd BufEnter *.txt let b:SuperTabDisabled=1
 "-----------------------------------------------------------------------------
 " FuzzyFinder plugin
 "-----------------------------------------------------------------------------
-
 nnoremap <silent> ,f :FufFile<CR>
+
+"-----------------------------------------------------------------------------
+" FSwitch plugin
+"-----------------------------------------------------------------------------
+nnoremap <silent> ,a :FSHere<CR>
+

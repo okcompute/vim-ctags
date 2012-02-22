@@ -11,4 +11,3 @@ function! SetFoldMode()
 endfunction
 
 au BufEnter *.py call SetFoldMode()
-

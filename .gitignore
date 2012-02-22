@@ -1,8 +1,2 @@
-.netrwhist
-tags
-doc/tags
-.DS_Store
-*.DS_Store
-*.vim~
 *.swp
-.VimballRecord
+tags
