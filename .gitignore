@@ -5,3 +5,4 @@ tags
 .netrwhist
 autoload/.DS_Store
 .VimballRecord
+*.*~
