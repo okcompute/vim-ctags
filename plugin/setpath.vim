@@ -11,7 +11,8 @@
 
 let projectList = [
 \ ['~/Developer/Git/VirtualLifeDrawing', 'CSharp', ''],
-\ ['~/Developer/Git/OkBudgetDesktop', 'ObjectiveC', '']
+\ ['~/Developer/Git/OkBudgetDesktop', 'ObjectiveC', ''],
+\ ['~/Developer/Git/OkBudget', 'ObjectiveC', '']
 \ ]
    
 " Ctags commands associated to language

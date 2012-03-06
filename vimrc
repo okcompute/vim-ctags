@@ -240,7 +240,7 @@ let g:pydoc_cmd = "python pydoc"
 
 " Blocks are not enabled by default in clang. Cocoa frameworks use them
 " extensively.
-let g:clang_user_options='-fblocks'
+let g:clang_user_options='-fblocks -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator5.0.sdk -D__IPHONE_OS_VERSION_MIN_REQUIRED=50000 -fobjc-arc' 
 
 " Complete options (disable preview scratch window)
 set completeopt=menu,menuone,longest
@@ -252,10 +252,13 @@ set pumheight=15
 let g:SuperTabDefaultCompletionType = "context"
 
 " Disable auto popup, use <Tab> to autocomplete
-let g:clang_complete_auto = 0
+let g:clang_complete_auto = 1
 
 " Show clang errors in the quickfix window
 let g:clang_complete_copen = 1
+
+" Check for clang errors from time to time
+let g:clang_periodic_quickfix = 1
 
 " The quotes at the beggining of clang_exec and at the end of clang_user_options are important, don't remove them
 " They basically trick vim into thinking clang executed fine, because the msvc build autocompletes correctly but fails
