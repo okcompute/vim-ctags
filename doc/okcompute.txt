@@ -107,6 +107,11 @@ b <tab>     - Changer de buffer. Tab passe au travers de la liste de tous les
 buffers ouverts.
 
 ================================================================
+ files
+================================================================
+:argadd /*.py - Ouvrir plusieurs fichiers en meme temps
+
+================================================================
  windows
 ================================================================
 :on         - Ferme toutes les fenetres sauf la courante(only)
