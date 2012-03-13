@@ -240,7 +240,7 @@ let g:pydoc_cmd = "python pydoc"
 
 " Blocks are not enabled by default in clang. Cocoa frameworks use them
 " extensively.
-let g:clang_user_options='-fblocks -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator5.0.sdk -D__IPHONE_OS_VERSION_MIN_REQUIRED=50000 -fobjc-arc' 
+let g:clang_user_options='-fblocks -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator5.1.sdk -D__IPHONE_OS_VERSION_MIN_REQUIRED=50000 -fobjc-arc' 
 
 " Complete options (disable preview scratch window)
 set completeopt=menu,menuone,longest
