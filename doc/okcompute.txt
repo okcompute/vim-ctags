@@ -15,6 +15,8 @@ ctrl-u          - Deplacement d'une demi-page vers le haut
 ctrl-d          - Deplacement d'une demi-page vers le bas
 g; 		- va au dernier changement fait dans le ficher. Le prochain appel ramene au precedent, etc.
 g, 		- va au changement precedent. Ne fait rien si on a pas fait g;
+.'              - va au dernier changement
+gi              - va a la derniere insertion et reactive le mode insertion
 h 		- deplace le curseur en haut de l'ecran
 m 		- deplace le curseur au milieu de l'ecran
 l 		- deplace le curseur a la fin de l'ecran
