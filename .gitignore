@@ -6,3 +6,4 @@ tags
 autoload/.DS_Store
 .VimballRecord
 *.*~
+*.swo
