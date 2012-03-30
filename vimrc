@@ -11,6 +11,7 @@ set nocompatible
 filetype off 
 call pathogen#infect()
 call pathogen#helptags()
+call pathogen#runtime_append_all_bundles()
 
 " Set the HOME 
 if has('win32') || has ('win64')
@@ -240,7 +241,9 @@ let g:pydoc_cmd = "python pydoc"
 
 " Blocks are not enabled by default in clang. Cocoa frameworks use them
 " extensively.
+if has('mac')
 let g:clang_user_options='-fblocks -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator5.1.sdk -D__IPHONE_OS_VERSION_MIN_REQUIRED=50000 -fobjc-arc' 
+endif
 
 " Complete options (disable preview scratch window)
 set completeopt=menu,menuone,longest
@@ -265,8 +268,8 @@ let g:clang_periodic_quickfix = 1
 " to compile.
 " Don't forget to put paths with spaces in quotes other wise vim won't be able to execute the command
 if has('win32') || has ('win64')
-let g:clang_exec = '"C:\clang\clang.exe'
-let g:clang_user_options = '2> NUL || exit 0"'
+let g:clang_exec = '"clang'
+let g:clang_user_options = '-ID:/perforce/online/team/dev_branches/UserStorage/OnlineSDK/. 2>NUL || exit 0"'
 endif
 
 "-----------------------------------------------------------------------------
@@ -279,7 +282,8 @@ autocmd BufEnter *.txt let b:SuperTabDisabled=1
 "-----------------------------------------------------------------------------
 " FuzzyFinder plugin
 "-----------------------------------------------------------------------------
-nnoremap <silent> ,f :FufFile<CR>
+nnoremap <silent> <Leader>ff :VPFuzzyFinder<CR> " Use VimProj FuzzyFinder intergration
+nnoremap <silent> <Leader>fb :FufBuffer<CR>
 
 "-----------------------------------------------------------------------------
 " FSwitch plugin
