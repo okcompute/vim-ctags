@@ -203,7 +203,7 @@ endif
 :nohls
 
 " When entering a buffer, change the current working directory
-autocmd BufEnter * cd %:p:h
+"autocmd BufEnter * cd %:p:h
 
 " disable toolbar
 set guioptions-=T
@@ -282,7 +282,8 @@ autocmd BufEnter *.txt let b:SuperTabDisabled=1
 "-----------------------------------------------------------------------------
 " FuzzyFinder plugin
 "-----------------------------------------------------------------------------
-nnoremap <silent> <Leader>ff :VPFuzzyFinder<CR> " Use VimProj FuzzyFinder intergration
+nnoremap <silent> <Leader>ft :FufTag<CR>
+nnoremap <silent> <Leader>ff :FufTaggedFile<CR>
 nnoremap <silent> <Leader>fb :FufBuffer<CR>
 
 "-----------------------------------------------------------------------------
