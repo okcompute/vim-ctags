@@ -9,10 +9,16 @@
 
 set tags=./tags;
 
-let s:PROJECTFOLDER = 0 
-let s:PROJECTMAKEPRG = 1
+" .vimproj file tags
+let s:VIMPROJ_FILE_TAG_MAKEPRG = 'makeprg'
+let s:VIMPROJ_FILE_TAG_CTAGS_ARGS = 'ctags_args'
+
+" projectDict constants
+let s:PROJECT_CTAGS_ARGS = 0 
+let s:PROJECT_MAKEPRG = 1
+
    
-function! s:AddProject(projectPath, projectFolders, projectMakePrg)
+function! s:AddProject(projectPath, projectCtagsArgs, projectMakePrg)
     if !exists("g:projectDict")
         " We make sure we have a dict 
         let g:projectDict = {}
@@ -20,10 +26,10 @@ function! s:AddProject(projectPath, projectFolders, projectMakePrg)
     if !has_key(g:projectDict, a:projectPath)
         "This is the first time this project is added to the dictionnary
         "Now is the good time to generate tags
-        call s:CreateCtags(a:projectPath, a:projectFolders)
+        call s:CreateCtags(a:projectPath, a:projectCtagsArgs)
     endif
     " Save the project info in a global dict for future reference
-    let g:projectDict[a:projectPath] = [a:projectFolders, a:projectMakePrg]
+    let g:projectDict[a:projectPath] = [a:projectCtagsArgs, a:projectMakePrg]
     " Mark the current buffer
     let b:projectPath = a:projectPath
 endfunction
@@ -33,7 +39,7 @@ function! s:RemoveProject(projectPath)
     "opened projects
 endfunction
 
-function! s:IsProjectExisting()
+function! s:ProjectExist()
     return exists("b:projectPath")
 endfunction
 
@@ -42,7 +48,11 @@ function! s:GetProjectPath()
 endfunction
 
 function! s:GetProjectMakeProg()
-    return g:projectDict[b:projectPath][s:PROJECTMAKEPRG]
+    return g:projectDict[b:projectPath][s:PROJECT_MAKEPRG]
+endfunction
+
+function! s:GetProjectCtagsArgs()
+    return g:projectDict[b:projectPath][s:PROJECT_CTAGS_ARGS]
 endfunction
 
 " Lookup the folder tree up to the root for a .vimproj file
@@ -54,51 +64,54 @@ function! s:ResolveProject()
     if filereadable(vimProj)
         " Init the var we are looking to fill up
         let projectPath = fnamemodify(vimProj, ":p:h")
-        let projectFolders = []
+        let projectCtagsArgs = []
         let projectMakePrg = ""
         " Read the .vimproj file one line at a time
         let items = readfile(vimProj)
         for n in items
-            " Look for 'make_prog' tag
-            let endIndex = matchend(n, '\c\s*\zsmake_prog\s*=')
+            " Look for 'makeprg' tag
+            let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_FILE_TAG_MAKEPRG.'\s*=')
             if endIndex != -1
                 " Extract the name of the program 
                 let projectMakePrg = substitute(strpart(n, endIndex), "\\s*\\(\\.*\\)\\s*", "\\1", "")
                 continue
             endif
-            " Look for 'folder' tag
-            let endIndex = matchend(n, '\c\s*\zsfolders\s*=')
+            " Look for 'ctags_args' tag
+            let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_FILE_TAG_CTAGS_ARGS.'\s*=')
             if endIndex != -1
-                let projectFolders = split(strpart(n, endIndex))
+                let projectCtagsArgs = split(strpart(n, endIndex))
                 continue
             endif
         endfor
         " Add project to currently opened project list
-        call s:AddProject(projectPath, projectFolders, projectMakePrg)
+        call s:AddProject(projectPath, projectCtagsArgs, projectMakePrg)
     endif
 endfunction
 
 function! s:SetPath()
-    if !s:IsProjectExisting()
+    if !s:ProjectExist()
         return
     endif
+    " TODO: Force the current working directory to be at the root of the project. This is to be
+    " compatible with FuzzyFinder plugin (it is a bug the dev are aware
+    " of). Once this bug is fixed in FuzzyFinder, it wont be required to inforce the current 
+    " working directory to be the project root.
     exe 'cd '.s:GetProjectPath()
     exe 'set path ='.s:GetProjectPath()."/**"
 endfunction
 
 function! s:SetMakePrg()
-    if !s:IsProjectExisting()
+    if !s:ProjectExist()
         return
     endif
     exe 'setlocal makeprg='.s:GetProjectMakeProg()
 endfunction
 
 " This function create the tags file (ctags) in the project path
-function! s:CreateCtags(projectPath, folders)
-    let ctagsCmd = "ctags "
-    let foldersArgs = join(a:folders, " ")
+function! s:CreateCtags(projectPath, args)
+    let ctagsCmd = "ctags ".join(a:args, " ")
     exe 'cd '.a:projectPath
-    exe 'silent !'.ctagsCmd.foldersArgs
+    exe 'silent !'.ctagsCmd
 endfunction
 
 function! VimProjBufRead()
