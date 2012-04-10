@@ -160,7 +160,7 @@ nmap <silent> ,gW :vimgrep /<C-r><C-a>/ %<CR>:ccl<CR>:cwin<CR><C-W>J:nohls<CR>
 
 " Toggle fullscreen mode
 if has('win32') || has ('win64')
-	nmap <silent> <F3> :call libcallnr("gvimfullscreen.dll", "ToggleFullScreen", 0)<CR>
+    nmap <silent> <F3> :call libcallnr("gvimfullscreen.dll", "ToggleFullScreen", 0)<CR>
 endif
 
 " Alright... let's try this out
@@ -172,33 +172,42 @@ set synmaxcol=2048
 " I don't like it when the matching parens are automatically highlighted
 let loaded_matchparen = 1
 
+" All backup files at the same place. Don't like having .swp or .~ files everywhere
+" on my system
+if has('win32') || has ('win64')
+    set backupdir=d:/vimbackups
+else
+    set backupdir=~/.vimbackup
+endif
+set backup
+
 "-----------------------------------------------------------------------------
 " Set up fonts
 "-----------------------------------------------------------------------------
 if has("mac")
-  let g:main_font = "Anonymous\\ Pro:h14"
-  let g:small_font = "Anonymous\\ Pro:h2"
+    let g:main_font = "Anonymous\\ Pro:h14"
+    let g:small_font = "Anonymous\\ Pro:h2"
 else
-  let g:main_font = "Anonymous\\ Pro:h13"
-  let g:small_font = "Anonymous\\ Pro:h2"
+    let g:main_font = "Anonymous\\ Pro:h13"
+    let g:small_font = "Anonymous\\ Pro:h2"
 endif
 
 "-----------------------------------------------------------------------------
 " Set up the window colors and size
 "-----------------------------------------------------------------------------
 if has("gui_running")
-  exe "set guifont=" . g:main_font
-  set background=dark
-  colorscheme wombat
-  if !exists("g:vimrcloaded")
-      winpos 0 0
-      if !&diff
-          winsize 130 120
-      else
-          winsize 227 120
-      endif
-      let g:vimrcloaded = 1
-  endif
+    exe "set guifont=" . g:main_font
+    set background=dark
+    colorscheme wombat
+    if !exists("g:vimrcloaded")
+        winpos 0 0
+        if !&diff
+            winsize 130 120
+        else
+            winsize 227 120
+        endif
+        let g:vimrcloaded = 1
+    endif
 endif
 :nohls
 
@@ -211,16 +220,16 @@ set guioptions-=T
 " Perforce
 let s:IgnoreChange=0
 autocmd! FileChangedRO * nested
-    \ let s:IgnoreChange=1 |
-    \ call system("p4 edit " . expand("%")) |
-    \ set noreadonly
+            \ let s:IgnoreChange=1 |
+            \ call system("p4 edit " . expand("%")) |
+            \ set noreadonly
 autocmd! FileChangedShell *
-    \ if 1 == s:IgnoreChange |
-    \   let v:fcs_choice="" |
-    \   let s:IgnoreChange=0 |
-    \ else |
-    \   let v:fcs_choice="ask" |
-    \ endif
+            \ if 1 == s:IgnoreChange |
+            \   let v:fcs_choice="" |
+            \   let s:IgnoreChange=0 |
+            \ else |
+            \   let v:fcs_choice="ask" |
+            \ endif
 
 
 " Directory. Ignore these files
@@ -242,15 +251,15 @@ let g:pydoc_cmd = "python pydoc"
 " Blocks are not enabled by default in clang. Cocoa frameworks use them
 " extensively.
 if has('mac')
-let g:clang_user_options='-fblocks -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator5.1.sdk -D__IPHONE_OS_VERSION_MIN_REQUIRED=50000 -fobjc-arc' 
+    let g:clang_user_options='-fblocks -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator5.1.sdk -D__IPHONE_OS_VERSION_MIN_REQUIRED=50000 -fobjc-arc' 
 endif
 
 " Complete options (disable preview scratch window)
 set completeopt=menu,menuone,longest
- 
+
 " Limit popup menu height
 set pumheight=15
- 
+
 " SuperTab option for context aware completion
 let g:SuperTabDefaultCompletionType = "context"
 
@@ -268,8 +277,8 @@ let g:clang_periodic_quickfix = 1
 " to compile.
 " Don't forget to put paths with spaces in quotes other wise vim won't be able to execute the command
 if has('win32') || has ('win64')
-let g:clang_exec = '"clang'
-let g:clang_user_options = '-ID:/perforce/online/team/dev_branches/UserStorage/OnlineSDK/. 2>NUL || exit 0"'
+    let g:clang_exec = '"clang'
+    let g:clang_user_options = '-ID:/perforce/online/team/dev_branches/UserStorage/OnlineSDK/. 2>NUL || exit 0"'
 endif
 
 "-----------------------------------------------------------------------------

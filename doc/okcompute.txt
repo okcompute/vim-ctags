@@ -123,6 +123,7 @@ buffers ouverts.
 ================================================================
 .           - Repeter la dernire commande Vim (meme les insertions de texte)
 afficher les numeros de ligne	- :se nu
+gg=G        - Indentation sur tout le fichier
 
 ================================================================
  console windows (quick fix window)
