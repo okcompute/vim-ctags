@@ -1,2 +1,0 @@
-make_prog = test
- files    = *.vim *.txt
