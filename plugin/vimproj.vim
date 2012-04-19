@@ -119,8 +119,6 @@ function! ResolveProject()
 
 endfunction
 
-nmap <silent> ,t :w\|so%\|call ResolveProject()<CR>
-
 function! s:ResolveFiles(projectPath, filesPatternList)
     let l:resolvedFiles = []
     for filePattern in a:filesPatternList
