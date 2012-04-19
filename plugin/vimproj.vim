@@ -1,7 +1,11 @@
-" vimproj.vim
+" Vimproj.vim
 "
-" vim plugin to manage folder associations and 
-" makeprg (to run or compile a project)
+" Version 0.9
+"
+" Manage files associations, ctags arguments and 
+" makeprg (to run or compile a project) for a group of files.
+"
+" TODO: - Update the project when a file is created or deleted
 "
 " Created November 15th 2011
 " By Pascal Lalancette
@@ -9,31 +13,33 @@
 
 set tags=./tags;
 
-" .vimproj file tags
-let s:VIMPROJ_TAG_MAKEPRG = 'makeprg'
-let s:VIMPROJ_TAG_CTAGS_ARGS = 'ctags_args'
-let s:VIMPROJ_TAG_FILES = 'files'
-let s:VIMPROJ_COMMENT = '"'
+" .vimproj file keys
+let s:VIMPROJ_KEY_MAKEPRG = 'makeprg'
+let s:VIMPROJ_KEY_CTAGS_ARGS = 'ctags_args'
+let s:VIMPROJ_KEY_FILES = 'files'
+let s:VIMPROJ_COMMENTS_LINE = '"'
 
-" projectDict constants
-let s:PROJECT_CTAGS_ARGS = 0 
-let s:PROJECT_MAKEPRG = 1
-let s:PROJECT_FILES = 2
+" vimprojDict index constants
+let s:PROJECT_CTAGS_ARGS_INDEX = 0 
+let s:PROJECT_MAKEPRG_INDEX = 1
+let s:PROJECT_FILES_INDEX = 2
 
 
 function! s:AddProject(projectPath, projectCtagsArgs, projectMakePrg, projectFiles)
-    if !exists("g:projectDict")
-        " We make sure we have a dict 
-        let g:projectDict = {}
+    if !exists("g:vimprojDict")
+        " Make sure the project dict is initialized
+        let g:vimprojDict = {}
     endif
-    if !has_key(g:projectDict, a:projectPath)
-        "This is the first time this project is added to the dictionnary
-        "Now is the good time to generate tags
+    if !has_key(g:vimprojDict, a:projectPath)
+        "This is the first time this project is added to the dictionnary.
+        "Now is the good time to generate tags. 
+        "Note: Auto updates of tags are not handled by vimproj.
+        "Suggestion: Install the Autotags.vim plugin. 
         call s:CreateCtags(a:projectPath, a:projectCtagsArgs, a:projectFiles)
     endif
-    " Save the project info in a global dict for future reference
-    let g:projectDict[a:projectPath] = [a:projectCtagsArgs, a:projectMakePrg, a:projectFiles]
-    " Mark the current buffer
+    " Save the project info in a global dict shared by all buffers
+    let g:vimprojDict[a:projectPath] = [a:projectCtagsArgs, a:projectMakePrg, a:projectFiles]
+    " Mark the project path to current buffer
     let b:projectPath = a:projectPath
 endfunction
 
@@ -51,15 +57,15 @@ function! s:GetProjectPath()
 endfunction
 
 function! s:GetProjectMakeProg()
-    return g:projectDict[b:projectPath][s:PROJECT_MAKEPRG]
+    return g:vimprojDict[b:projectPath][s:PROJECT_MAKEPRG_INDEX]
 endfunction
 
 function! s:GetProjectCtagsArgs()
-    return g:projectDict[b:projectPath][s:PROJECT_CTAGS_ARGS]
+    return g:vimprojDict[b:projectPath][s:PROJECT_CTAGS_ARGS_INDEX]
 endfunction
 
 function! s:GetProjectFiles()
-    return g:projectDict[b:projectPath][s:PROJECT_FILES]
+    return g:vimprojDict[b:projectPath][s:PROJECT_FILES_INDEX]
 endfunction
 
 " Lookup the folder tree up to the root for a .vimproj file
@@ -68,45 +74,49 @@ function! ResolveProject()
     " Look up for a .vimproj file up to the root
     let vimProj = findfile(".vimproj", ".;")
     " If a a valid file, parse it
-    if filereadable(vimProj)
-        " Init the var we are looking to fill up
-        let projectPath = fnamemodify(vimProj, ":p:h")
-        let projectCtagsArgs = []
-        let projectFiles = []
-        let projectMakePrg = ""
-        " Read the .vimproj file one line at a time
-        let items = readfile(vimProj)
-        for n in items
-            " Look for commented line
-            let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_COMMENT.'.*')
-            if endIndex != -1
-                " Skip this line
-                continue
-            endif
-            " Look for 'makeprg' tag
-            let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_TAG_MAKEPRG.'\s*=')
-            if endIndex != -1
-                " Extract the name of the program 
-                let projectMakePrg = substitute(strpart(n, endIndex), "\\s*\\(\\.*\\)\\s*", "\\1", "")
-                continue
-            endif
-            " Look for 'ctags_args' tag
-            let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_TAG_CTAGS_ARGS.'\s*=')
-            if endIndex != -1
-                let projectCtagsArgs = split(strpart(n, endIndex))
-                continue
-            endif
-            " Look for 'files' tag
-            let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_TAG_FILES.'\s*=')
-            if endIndex != -1
-                "let projectFiles = split(strpart(n, endIndex))
-                let projectFiles = s:ResolveFiles(projectPath, split(strpart(n,endIndex)))
-                continue
-            endif
-        endfor
-        " Add project to currently opened project list
-        call s:AddProject(projectPath, projectCtagsArgs, projectMakePrg, projectFiles)
+    if !filereadable(vimProj)
+        return
     endif
+
+    " Init the var we are looking to fill up
+    let projectPath = fnamemodify(vimProj, ":p:h")
+    let projectCtagsArgs = []
+    let projectFiles = []
+    let projectMakePrg = ""
+
+    " Read the .vimproj file one line at a time
+    let items = readfile(vimProj)
+    for n in items
+        " Look for commented line
+        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_COMMENTS_LINE.'.*')
+        if endIndex != -1
+            " Skip this line
+            continue
+        endif
+        " Look for 'makeprg' tag
+        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_MAKEPRG.'\s*=')
+        if endIndex != -1
+            " Extract the name of the program 
+            let projectMakePrg = substitute(strpart(n, endIndex), "\\s*\\(\\.*\\)\\s*", "\\1", "")
+            continue
+        endif
+        " Look for 'ctags_args' tag
+        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_CTAGS_ARGS.'\s*=')
+        if endIndex != -1
+            let projectCtagsArgs = split(strpart(n, endIndex))
+            continue
+        endif
+        " Look for 'files' tag
+        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_FILES.'\s*=')
+        if endIndex != -1
+            "let projectFiles = split(strpart(n, endIndex))
+            let projectFiles = s:ResolveFiles(projectPath, split(strpart(n,endIndex)))
+            continue
+        endif
+    endfor
+    " Add project to currently opened project list
+    call s:AddProject(projectPath, projectCtagsArgs, projectMakePrg, projectFiles)
+
 endfunction
 
 nmap <silent> ,t :w\|so%\|call ResolveProject()<CR>
@@ -118,22 +128,26 @@ function! s:ResolveFiles(projectPath, filesPatternList)
         let l:folder = ''
         let filePattern = substitute(filePattern, '^[\|/]\(.*\)$', '\1', "")
 
-        if match(filePattern, '/') >= 0
-            let l:folder = substitute(filePattern, '\(.*/\).*$', '\1', "")
-        else
-            let l:folder = ''
+        " Lookup for the folder part in the pattern
+        if match(filePattern, '[\|/]') >= 0
+            let l:folder = fnamemodify(filePattern, ":.:h").'/'
         endif
 
-        let pattern = substitute(filePattern, '.*/\(.*\)$', '\1', "")
+        " extract the pattern
+        let l:pattern = fnamemodify(filePattern, ':t')
 
         if match(pattern, '*') != -1 && folder != ''
-            " this is a star search in a folder
+            " This is a star search in a folder. Force recursion
             let pattern = '**/'.pattern
         endif
 
+        " Make sure the current working directory is the project path
         exe 'cd '.a:projectPath
+
         let l:resolvedFiles += split(globpath(a:projectPath, folder.pattern), "\n")
 
+        " Convert all the files in a relative mode. i.e. make it prettier for 
+        " the user.
         let l:relativeFiles = []
         for absoluteFile in l:resolvedFiles
             let l:relativeFiles += [fnamemodify(absoluteFile, ":.")]
@@ -146,11 +160,6 @@ function! s:SetPath()
     if !s:ProjectExist()
         return
     endif
-    " TODO: Force the current working directory to be at the root of the project. This is to be
-    " compatible with FuzzyFinder plugin (it is a bug the dev are aware
-    " of). Once this bug is fixed in FuzzyFinder, it wont be required to inforce the current 
-    " working directory to be the project root.
-    "exe 'cd '.s:GetProjectPath()
     exe 'set path ='.s:GetProjectPath()."/**"
 endfunction
 
@@ -170,7 +179,6 @@ endfunction
 
 function! s:VimProjBufRead()
     exe 'cd %:p:h'
-    echomsg "VimProjBufRead called"
     call ResolveProject()
     call s:SetMakePrg()
 endfunction
@@ -181,11 +189,15 @@ function! s:VimProjBufEnter()
 endfunction
 
 function! s:VimProjFuzzyFindFiles()
+    " A project must have been set for this buffer
     if !s:ProjectExist()
         return
     endif
+    " Collaboration between vimproj and FuzzyFinder Plugin
+    if !exists('fuf#givenfile#launch')
+        return
+    endif
     let filesList = s:GetProjectFiles()
-    echo filesList
     exe 'cd '.s:GetProjectPath()
     call fuf#givenfile#launch('', 0, '>', filesList)
 endfunction
