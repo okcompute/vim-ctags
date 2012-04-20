@@ -41,6 +41,7 @@ function! s:AddProject(projectPath, projectCtagsArgs, projectMakePrg, projectFil
     let g:vimprojDict[a:projectPath] = [a:projectCtagsArgs, a:projectMakePrg, a:projectFiles]
     " Mark the project path to current buffer
     let b:projectPath = a:projectPath
+    echo "VimProj: Project folder \'".a:projectPath."\' added"
 endfunction
 
 function! s:RemoveProject(projectPath)
@@ -192,12 +193,31 @@ function! s:VimProjFuzzyFindFiles()
         return
     endif
     " Collaboration between vimproj and FuzzyFinder Plugin
-    if !exists('fuf#givenfile#launch')
+    " FuzzyFinder must be installed
+    if !exists("*fuf#givenfile#launch")
         return
     endif
     let filesList = s:GetProjectFiles()
     exe 'cd '.s:GetProjectPath()
     call fuf#givenfile#launch('', 0, '>', filesList)
+endfunction
+
+function! s:VimProjReset()
+    if !s:ProjectExist()
+        "Nothing to reset!
+        return
+    endif
+    " Erase any traces of vimproj
+    unlet g:vimprojDict
+    unlet b:projectPath
+    " ReInit the project on current buffer
+    call s:VimProjBufRead()
+endfunction
+
+function! s:VimProjAddFile()
+endfunction
+
+function! s:VimProjDeleteFile()
 endfunction
 
 augroup vimproj_bufenter
@@ -211,6 +231,20 @@ augroup vimproj_bufread
 augroup END
 
 " Command Mappings
+" ================
+
 if !exists(":VimProjFuzzyFindFiles")
     command VimProjFuzzyFindFiles :call <SID>VimProjFuzzyFindFiles()
+endif
+
+if !exists(":VimProjReset")
+    command VimProjReset :call <SID>VimProjReset()
+endif
+
+if !exists(":VimProjAddFile")
+    command VimProjAddFile :call <SID>VimProjAddFile()
+endif
+
+if !exists(":VimProjDeleteFile")
+    command VimProjDeleteFile :call <SID>VimProjDeleteFile()
 endif
