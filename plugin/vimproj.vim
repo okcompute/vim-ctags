@@ -41,7 +41,7 @@ function! s:AddProject(projectPath, projectCtagsArgs, projectMakePrg, projectFil
     let g:vimprojDict[a:projectPath] = [a:projectCtagsArgs, a:projectMakePrg, a:projectFiles]
     " Mark the project path to current buffer
     let b:projectPath = a:projectPath
-    echo "VimProj: Project folder \'".a:projectPath."\' added"
+    echo "VimProj: Project \'".a:projectPath."\' added (".len(a:projectFiles)." files)"
 endfunction
 
 function! s:RemoveProject(projectPath)
@@ -110,7 +110,6 @@ function! ResolveProject()
         " Look for 'files' tag
         let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_FILES.'\s*=')
         if endIndex != -1
-            "let projectFiles = split(strpart(n, endIndex))
             let projectFiles = s:ResolveFiles(projectPath, split(strpart(n,endIndex)))
             continue
         endif
@@ -129,7 +128,7 @@ function! s:ResolveFiles(projectPath, filesPatternList)
 
         " Lookup for the folder part in the pattern
         if match(filePattern, '[\|/]') >= 0
-            let l:folder = fnamemodify(filePattern, ":.:h").'/'
+            let l:folder = substitute(filePattern, '\(.*/\).*$', '\1', "")
         endif
 
         " extract the pattern
@@ -149,7 +148,12 @@ function! s:ResolveFiles(projectPath, filesPatternList)
         " the user.
         let l:relativeFiles = []
         for absoluteFile in l:resolvedFiles
-            let l:relativeFiles += [fnamemodify(absoluteFile, ":.")]
+            if has('win32') || has ('win64')
+                let index = match(absoluteFile, '\.')
+                let l:relativeFiles += [strpart(absoluteFile, index)]
+            else
+                let l:relativeFiles += [fnamemodify(absoluteFile, ":.")]
+            endif
         endfor
     endfor
     return l:relativeFiles
@@ -159,7 +163,7 @@ function! s:SetPath()
     if !s:ProjectExist()
         return
     endif
-    exe 'set path ='.s:GetProjectPath()."/**"
+    exe 'set path ='.escape(s:GetProjectPath(), ' \')."/**"
 endfunction
 
 function! s:SetMakePrg()
@@ -171,9 +175,18 @@ endfunction
 
 " This function create the tags file (ctags) in the project path
 function! s:CreateCtags(projectPath, args, projectFiles)
-    let ctagsCmd = "ctags ".join(a:args, " ")." ".join(a:projectFiles, " ")
+    let tmpfile = tempname()
+    if writefile(a:projectFiles, tmpfile) != 0
+        echoerr "VimProj Error: Cannot write to temporary file. Aborting Ctags generation!"
+        return
+    endif
+    " Create a ctags shell command that receive the project files from a temp file
+    let ctagsCmd = "ctags ".join(a:args, " ").' -L '.tmpfile
     exe 'cd '.a:projectPath
     exe 'silent !'.ctagsCmd
+    if delete(tmpfile) != 0
+        echoerr "VimProj Error: Cannot delete temporary file: ".tmpfile
+    endif
 endfunction
 
 function! s:VimProjBufRead()
@@ -203,13 +216,11 @@ function! s:VimProjFuzzyFindFiles()
 endfunction
 
 function! s:VimProjReset()
-    if !s:ProjectExist()
-        "Nothing to reset!
-        return
+    if s:ProjectExist()
+        " Erase any traces of vimproj
+        unlet g:vimprojDict
+        unlet b:projectPath
     endif
-    " Erase any traces of vimproj
-    unlet g:vimprojDict
-    unlet b:projectPath
     " ReInit the project on current buffer
     call s:VimProjBufRead()
 endfunction
@@ -218,6 +229,10 @@ function! s:VimProjAddFile()
 endfunction
 
 function! s:VimProjDeleteFile()
+endfunction
+
+function! VimProjGetFiles()
+    return s:GetProjectFiles()
 endfunction
 
 augroup vimproj_bufenter
