@@ -29,6 +29,7 @@ function! s:AddProject(projectPath, projectCtagsArgs, projectMakePrg, projectFil
     if !exists("g:vimprojDict")
         " Make sure the project dict is initialized
         let g:vimprojDict = {}
+        echo "VimProj: Project \'".a:projectPath."\' added (".len(a:projectFiles)." files)"
     endif
     if !has_key(g:vimprojDict, a:projectPath)
         "This is the first time this project is added to the dictionnary.
@@ -41,7 +42,6 @@ function! s:AddProject(projectPath, projectCtagsArgs, projectMakePrg, projectFil
     let g:vimprojDict[a:projectPath] = [a:projectCtagsArgs, a:projectMakePrg, a:projectFiles]
     " Mark the project path to current buffer
     let b:projectPath = a:projectPath
-    echo "VimProj: Project \'".a:projectPath."\' added (".len(a:projectFiles)." files)"
 endfunction
 
 function! s:RemoveProject(projectPath)
@@ -231,6 +231,17 @@ endfunction
 function! s:VimProjDeleteFile()
 endfunction
 
+function! s:VimProjGrep(command)
+    let currentDirectory = getcwd()
+    exe 'cd '.s:GetProjectPath()
+    " call vimgrep with autocommand disabled on all project files. We disable
+    " autocommands otherwise the process is really slow.
+    execute "noautocmd vimgrep".a:command." ".join(VimProjGetFiles(), " ")
+    " Automatically open the quickfix window (author privilege :-))
+    execute "copen"
+    exe 'cd '.currentDirectory
+endfunction
+
 function! VimProjGetFiles()
     return s:GetProjectFiles()
 endfunction
@@ -263,3 +274,11 @@ endif
 if !exists(":VimProjDeleteFile")
     command VimProjDeleteFile :call <SID>VimProjDeleteFile()
 endif
+
+if !exists(":VimProjGrep ")
+    command -nargs=1 -complete=command VimProjGrep call <SID>VimProjGrep(<q-args>)
+endif
+
+" VimProjGrep abbreviation for faster input. Bonus: no uppercase like user
+" defined command
+cnoreabbrev vimp VimProjGrep
