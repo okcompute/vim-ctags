@@ -242,6 +242,28 @@ function! s:VimProjGrep(command)
     exe 'cd '.currentDirectory
 endfunction
 
+function! s:VimProjSubstitute(command)
+    " TODO: impelement this so it is more user friendly. It should
+    " loop on the file one by one:
+    " 1)get to know if a buffer exist. 
+    " 2) execute the substitute command
+    " 3) if the buffer was already opened => next
+    " 4) if the buffer was not already opened and is modified => next
+    " 5) if the buffer is not modified, delete it and goto next
+    " it exist, never delete the buffer
+    let currentDirectory = getcwd()
+    exe 'cd '.s:GetProjectPath()
+    " Set this window to use a local arglist
+    exe 'arglocal'
+    "build up the arg list
+    exe 'argadd '.join(VimProjGetFiles(), " ")
+    "call substitute on every file 
+    execute "noautocmd argdo %s".a:command
+    " flush the arg list
+    exe 'argd *'
+    exe 'cd '.currentDirectory
+endfunction
+
 function! VimProjGetFiles()
     return s:GetProjectFiles()
 endfunction
@@ -275,10 +297,18 @@ if !exists(":VimProjDeleteFile")
     command VimProjDeleteFile :call <SID>VimProjDeleteFile()
 endif
 
-if !exists(":VimProjGrep ")
+if !exists(":VimProjGrep")
     command -nargs=1 -complete=command VimProjGrep call <SID>VimProjGrep(<q-args>)
 endif
 
 " VimProjGrep abbreviation for faster input. Bonus: no uppercase like user
 " defined command
-cnoreabbrev vimp VimProjGrep
+cnoreabbrev vpg VimProjGrep
+
+if !exists(":VimProjSubstitute")
+    command -nargs=1 -complete=command VimProjSubstitute call <SID>VimProjSubstitute(<q-args>)
+endif
+
+" VimProjSubstitute abbreviation for faster input. Bonus: no uppercase like user
+" defined command
+cnoreabbrev vps VimProjSubstitute
