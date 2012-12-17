@@ -24,7 +24,7 @@ let s:PROJECT_CTAGS_ARGS_INDEX = 0
 let s:PROJECT_MAKEPRG_INDEX = 1
 let s:PROJECT_FILES_INDEX = 2
 
-let g:vimproj_debug = 1
+let g:vimproj_debug = 0
 let g:vimproj_current_project = ""
 
 
