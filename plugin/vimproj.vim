@@ -24,24 +24,68 @@ let s:PROJECT_CTAGS_ARGS_INDEX = 0
 let s:PROJECT_MAKEPRG_INDEX = 1
 let s:PROJECT_FILES_INDEX = 2
 
+let g:vimproj_debug = 1
+let g:vimproj_current_project = ""
 
-function! s:AddProject(projectPath, projectCtagsArgs, projectMakePrg, projectFiles)
+
+function! s:ShowDebugMsg(msg)
+    if g:vimproj_debug != 0
+        echomsg "Vimproj :".a:msg
+    endif
+endfunction
+
+function! s:CreateProject(vimProj, projectPath)
+    let projectCtagsArgs = []
+    let projectFiles = []
+    let projectMakePrg = ""
+
+    " Read the .vimproj file one line at a time
+    let items = readfile(a:vimProj)
+    for n in items
+        " Look for commented line
+        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_COMMENTS_LINE.'.*')
+        if endIndex != -1
+            " Skip this line
+            continue
+        endif
+        " Look for 'makeprg' tag
+        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_MAKEPRG.'\s*=')
+        if endIndex != -1
+            " Extract the name of the program 
+            call s:ShowDebugMsg("Found makeprg command: ".n)
+            let projectMakePrg = substitute(strpart(n, endIndex), "\\s*\\(\\.*\\)\\s*", "\\1", "")
+            continue
+        endif
+        " Look for 'ctags_args' tag
+        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_CTAGS_ARGS.'\s*=')
+        if endIndex != -1
+            call s:ShowDebugMsg("Found ctags arguments: ".n)
+            let projectCtagsArgs = split(strpart(n, endIndex))
+            continue
+        endif
+        " Look for 'files' tag
+        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_FILES.'\s*=')
+        if endIndex != -1
+            call s:ShowDebugMsg("Found files list: ".n)
+            let projectFiles = s:ResolveFiles(a:projectPath, split(strpart(n,endIndex)))
+            continue
+        endif
+    endfor
+
     if !exists("g:vimprojDict")
         " Make sure the project dict is initialized
         let g:vimprojDict = {}
-        echo "VimProj: Project \'".a:projectPath."\' added (".len(a:projectFiles)." files)"
+        echomsg "VimProj : Project \'".a:projectPath."\' added (".len(projectFiles)." files)"
     endif
-    if !has_key(g:vimprojDict, a:projectPath)
-        "This is the first time this project is added to the dictionnary.
-        "Now is the good time to generate tags. 
-        "Note: Auto updates of tags are not handled by vimproj.
-        "Suggestion: Install the Autotags.vim plugin. 
-        call s:CreateCtags(a:projectPath, a:projectCtagsArgs, a:projectFiles)
-    endif
+
+    "This is the first time this project is added to the dictionnary.
+    "Now is the good time to generate tags. 
+    "Note: Auto updates of tags are not handled by vimproj.
+    "Suggestion: Install the Autotags.vim plugin. 
+    call s:CreateCtags(a:projectPath, projectCtagsArgs, projectFiles)
+
     " Save the project info in a global dict shared by all buffers
-    let g:vimprojDict[a:projectPath] = [a:projectCtagsArgs, a:projectMakePrg, a:projectFiles]
-    " Mark the project path to current buffer
-    let b:projectPath = a:projectPath
+    let g:vimprojDict[a:projectPath] = [projectCtagsArgs, projectMakePrg, projectFiles]
 endfunction
 
 function! s:RemoveProject(projectPath)
@@ -49,12 +93,19 @@ function! s:RemoveProject(projectPath)
     "opened projects
 endfunction
 
-function! s:ProjectExist()
+function! s:IsBufferInsideProject()
     return exists("b:projectPath")
 endfunction
 
-function! s:GetProjectPath()
+function! s:GetBufferProjectPath()
     return b:projectPath
+endfunction
+
+function! s:IsProjectCreated(projectPath)
+    if !exists("g:vimprojDict")
+        return 0
+    endif
+    return has_key(g:vimprojDict, a:projectPath)
 endfunction
 
 function! s:GetProjectMakeProg()
@@ -72,50 +123,27 @@ endfunction
 " Lookup the folder tree up to the root for a .vimproj file
 " Once found, build a a list of files associated to this project
 function! ResolveProject()
+    call s:ShowDebugMsg("Resolving project file (.vimproj)")
     " Look up for a .vimproj file up to the root
     let vimProj = findfile(".vimproj", ".;")
     " If a a valid file, parse it
     if !filereadable(vimProj)
+        call s:ShowDebugMsg(".vimproj file not found")
         return
     endif
 
-    " Init the var we are looking to fill up
-    let projectPath = fnamemodify(vimProj, ":p:h")
-    let projectCtagsArgs = []
-    let projectFiles = []
-    let projectMakePrg = ""
+    call s:ShowDebugMsg("Found a vimproj file: ".vimProj)
 
-    " Read the .vimproj file one line at a time
-    let items = readfile(vimProj)
-    for n in items
-        " Look for commented line
-        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_COMMENTS_LINE.'.*')
-        if endIndex != -1
-            " Skip this line
-            continue
-        endif
-        " Look for 'makeprg' tag
-        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_MAKEPRG.'\s*=')
-        if endIndex != -1
-            " Extract the name of the program 
-            let projectMakePrg = substitute(strpart(n, endIndex), "\\s*\\(\\.*\\)\\s*", "\\1", "")
-            continue
-        endif
-        " Look for 'ctags_args' tag
-        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_CTAGS_ARGS.'\s*=')
-        if endIndex != -1
-            let projectCtagsArgs = split(strpart(n, endIndex))
-            continue
-        endif
-        " Look for 'files' tag
-        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_FILES.'\s*=')
-        if endIndex != -1
-            let projectFiles = s:ResolveFiles(projectPath, split(strpart(n,endIndex)))
-            continue
-        endif
-    endfor
-    " Add project to currently opened project list
-    call s:AddProject(projectPath, projectCtagsArgs, projectMakePrg, projectFiles)
+    " Extract the project path from the vimProj filename
+    let projectPath = fnamemodify(vimProj, ":p:h")
+
+    if !s:IsProjectCreated(projectPath)
+        call s:CreateProject(vimProj, projectPath)
+    endif
+
+    " Mark the project path to current buffer
+    let b:projectPath = projectPath
+    call s:ShowDebugMsg("Project path for buffer: ".projectPath)
 
 endfunction
 
@@ -160,14 +188,14 @@ function! s:ResolveFiles(projectPath, filesPatternList)
 endfunction
 
 function! s:SetPath()
-    if !s:ProjectExist()
+    if !s:IsBufferInsideProject()
         return
     endif
-    exe 'set path ='.escape(s:GetProjectPath(), ' \')."/**"
+    exe 'set path ='.escape(s:GetBufferProjectPath(), ' \')."/**"
 endfunction
 
 function! s:SetMakePrg()
-    if !s:ProjectExist()
+    if !s:IsBufferInsideProject()
         return
     endif
     exe 'setlocal makeprg='.s:GetProjectMakeProg()
@@ -175,6 +203,7 @@ endfunction
 
 " This function create the tags file (ctags) in the project path
 function! s:CreateCtags(projectPath, args, projectFiles)
+    call s:ShowDebugMsg("Creating ctags for project ".a:projectPath)
     let tmpfile = tempname()
     if writefile(a:projectFiles, tmpfile) != 0
         echoerr "VimProj Error: Cannot write to temporary file. Aborting Ctags generation!"
@@ -202,7 +231,7 @@ endfunction
 
 function! s:VimProjFuzzyFindFiles()
     " A project must have been set for this buffer
-    if !s:ProjectExist()
+    if !s:IsBufferInsideProject()
         return
     endif
     " Collaboration between vimproj and FuzzyFinder Plugin
@@ -211,12 +240,12 @@ function! s:VimProjFuzzyFindFiles()
         return
     endif
     let filesList = s:GetProjectFiles()
-    exe 'cd '.s:GetProjectPath()
+    exe 'cd '.s:GetBufferProjectPath()
     call fuf#givenfile#launch('', 0, '>', filesList)
 endfunction
 
 function! s:VimProjReset()
-    if s:ProjectExist()
+    if s:IsBufferInsideProject()
         " Erase any traces of vimproj
         unlet g:vimprojDict
         unlet b:projectPath
@@ -233,7 +262,7 @@ endfunction
 
 function! s:VimProjGrep(command)
     let currentDirectory = getcwd()
-    exe 'cd '.s:GetProjectPath()
+    exe 'cd '.s:GetBufferProjectPath()
     " call vimgrep with autocommand disabled on all project files. We disable
     " autocommands otherwise the process is really slow.
     execute "noautocmd vimgrep".a:command." ".join(VimProjGetFiles(), " ")
@@ -252,7 +281,7 @@ function! s:VimProjSubstitute(command)
     " 5) if the buffer is not modified, delete it and goto next
     " it exist, never delete the buffer
     let currentDirectory = getcwd()
-    exe 'cd '.s:GetProjectPath()
+    exe 'cd '.s:GetBufferProjectPath()
     " Set this window to use a local arglist
     exe 'arglocal'
     "build up the arg list
