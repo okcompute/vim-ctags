@@ -141,7 +141,7 @@ function! ResolveProject()
         call s:CreateProject(vimProj, projectPath)
     endif
 
-    " Mark the project path to current buffer
+    " Save the project path to current buffer local var
     let b:projectPath = projectPath
     call s:ShowDebugMsg("Project path for buffer: ".projectPath)
 
@@ -245,9 +245,9 @@ function! s:VimProjFuzzyFindFiles()
 endfunction
 
 function! s:VimProjReset()
+    " Erase any traces of vimproj
+    unlet g:vimprojDict
     if s:IsBufferInsideProject()
-        " Erase any traces of vimproj
-        unlet g:vimprojDict
         unlet b:projectPath
     endif
     " ReInit the project on current buffer
@@ -272,22 +272,22 @@ function! s:VimProjGrep(command)
 endfunction
 
 function! s:VimProjSubstitute(command)
-    " TODO: impelement this so it is more user friendly. It should
-    " loop on the file one by one:
-    " 1)get to know if a buffer exist. 
-    " 2) execute the substitute command
-    " 3) if the buffer was already opened => next
-    " 4) if the buffer was not already opened and is modified => next
-    " 5) if the buffer is not modified, delete it and goto next
-    " it exist, never delete the buffer
+    " TODO: impelement this 
+    " Create a list arglist files minus opened buffer
+    " Those files are to be closed if not modified
+
     let currentDirectory = getcwd()
     exe 'cd '.s:GetBufferProjectPath()
     " Set this window to use a local arglist
     exe 'arglocal'
     "build up the arg list
     exe 'argadd '.join(VimProjGetFiles(), " ")
+    " Remove the 'More' prompt that require to press the spacebar
+    set nomore
     "call substitute on every file 
-    execute "noautocmd argdo %s".a:command
+    execute "argdo set eventignore-=Syntax | %s".a:command." | update"
+    " Reactivate the more
+    set more
     " flush the arg list
     exe 'argd *'
     exe 'cd '.currentDirectory
