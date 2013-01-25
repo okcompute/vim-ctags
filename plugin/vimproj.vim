@@ -14,15 +14,11 @@
 set tags=./tags;
 
 " .vimproj file keys
-let s:VIMPROJ_KEY_MAKEPRG = 'makeprg'
-let s:VIMPROJ_KEY_CTAGS_ARGS = 'ctags_args'
 let s:VIMPROJ_KEY_FILES = 'files'
 let s:VIMPROJ_COMMENTS_LINE = '"'
 
 " vimprojDict index constants
-let s:PROJECT_CTAGS_ARGS_INDEX = 0 
-let s:PROJECT_MAKEPRG_INDEX = 1
-let s:PROJECT_FILES_INDEX = 2
+let s:PROJECT_FILES_INDEX = 0
 
 let g:vimproj_debug = 0
 let g:vimproj_current_project = ""
@@ -35,9 +31,7 @@ function! s:ShowDebugMsg(msg)
 endfunction
 
 function! s:CreateProject(vimProj, projectPath)
-    let projectCtagsArgs = []
     let projectFiles = []
-    let projectMakePrg = ""
 
     " Read the .vimproj file one line at a time
     let items = readfile(a:vimProj)
@@ -46,21 +40,6 @@ function! s:CreateProject(vimProj, projectPath)
         let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_COMMENTS_LINE.'.*')
         if endIndex != -1
             " Skip this line
-            continue
-        endif
-        " Look for 'makeprg' tag
-        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_MAKEPRG.'\s*=')
-        if endIndex != -1
-            " Extract the name of the program 
-            call s:ShowDebugMsg("Found makeprg command: ".n)
-            let projectMakePrg = substitute(strpart(n, endIndex), "\\s*\\(\\.*\\)\\s*", "\\1", "")
-            continue
-        endif
-        " Look for 'ctags_args' tag
-        let endIndex = matchend(n, '\c\s*\zs'.s:VIMPROJ_KEY_CTAGS_ARGS.'\s*=')
-        if endIndex != -1
-            call s:ShowDebugMsg("Found ctags arguments: ".n)
-            let projectCtagsArgs = split(strpart(n, endIndex))
             continue
         endif
         " Look for 'files' tag
@@ -82,15 +61,10 @@ function! s:CreateProject(vimProj, projectPath)
     "Now is the good time to generate tags. 
     "Note: Auto updates of tags are not handled by vimproj.
     "Suggestion: Install the Autotags.vim plugin. 
-    call s:CreateCtags(a:projectPath, projectCtagsArgs, projectFiles)
+    call s:CreateCtags(a:projectPath)
 
     " Save the project info in a global dict shared by all buffers
-    let g:vimprojDict[a:projectPath] = [projectCtagsArgs, projectMakePrg, projectFiles]
-endfunction
-
-function! s:RemoveProject(projectPath)
-    "TODO: implement me if you think it would be interesting to clean up
-    "opened projects
+    let g:vimprojDict[a:projectPath] = [projectFiles]
 endfunction
 
 function! s:IsBufferInsideProject()
@@ -106,14 +80,6 @@ function! s:IsProjectCreated(projectPath)
         return 0
     endif
     return has_key(g:vimprojDict, a:projectPath)
-endfunction
-
-function! s:GetProjectMakeProg()
-    return g:vimprojDict[b:projectPath][s:PROJECT_MAKEPRG_INDEX]
-endfunction
-
-function! s:GetProjectCtagsArgs()
-    return g:vimprojDict[b:projectPath][s:PROJECT_CTAGS_ARGS_INDEX]
 endfunction
 
 function! s:GetProjectFiles()
@@ -194,34 +160,27 @@ function! s:SetPath()
     exe 'set path ='.escape(s:GetBufferProjectPath(), ' \')."/**"
 endfunction
 
-function! s:SetMakePrg()
-    if !s:IsBufferInsideProject()
-        return
-    endif
-    exe 'setlocal makeprg='.s:GetProjectMakeProg()
-endfunction
+" This function create the tags file (ctags) 
+function! s:CreateCtags(projectPath)
+    call s:ShowDebugMsg("Creating ctags file")
+    
+    " Create a ctags shell command 
+    let ctagsCmd = "ctags -R ."
+    let ctagsDotFile = findfile(".ctags", ".;")
 
-" This function create the tags file (ctags) in the project path
-function! s:CreateCtags(projectPath, args, projectFiles)
-    call s:ShowDebugMsg("Creating ctags for project ".a:projectPath)
-    let tmpfile = tempname()
-    if writefile(a:projectFiles, tmpfile) != 0
-        echoerr "VimProj Error: Cannot write to temporary file. Aborting Ctags generation!"
-        return
-    endif
-    " Create a ctags shell command that receive the project files from a temp file
-    let ctagsCmd = "ctags ".join(a:args, " ").' -L '.tmpfile
-    exe 'cd '.a:projectPath
+    " Extract the path from the .ctags filename
+    let ctagsPath = fnamemodify(ctagsDotFile, ":p:h")
+
+    exe 'cd '.ctagsPath
     exe 'silent !'.ctagsCmd
-    if delete(tmpfile) != 0
-        echoerr "VimProj Error: Cannot delete temporary file: ".tmpfile
-    endif
+
+    " Return the cwd to project path
+    exe 'cd '.a:projectPath
 endfunction
 
 function! s:VimProjBufRead()
     exe 'cd %:p:h'
     call ResolveProject()
-    call s:SetMakePrg()
 endfunction
 
 function! s:VimProjBufEnter()
@@ -252,12 +211,6 @@ function! s:VimProjReset()
     endif
     " ReInit the project on current buffer
     call s:VimProjBufRead()
-endfunction
-
-function! s:VimProjAddFile()
-endfunction
-
-function! s:VimProjDeleteFile()
 endfunction
 
 function! s:VimProjGrep(command)
@@ -318,25 +271,20 @@ if !exists(":VimProjReset")
     command VimProjReset :call <SID>VimProjReset()
 endif
 
-if !exists(":VimProjAddFile")
-    command VimProjAddFile :call <SID>VimProjAddFile()
-endif
-
-if !exists(":VimProjDeleteFile")
-    command VimProjDeleteFile :call <SID>VimProjDeleteFile()
-endif
-
 if !exists(":VimProjGrep")
     command -nargs=1 -complete=command VimProjGrep call <SID>VimProjGrep(<q-args>)
 endif
 
-" VimProjGrep abbreviation for faster input. Bonus: no uppercase like user
-" defined command
-cnoreabbrev vpg VimProjGrep
-
 if !exists(":VimProjSubstitute")
     command -nargs=1 -complete=command VimProjSubstitute call <SID>VimProjSubstitute(<q-args>)
 endif
+
+" Command Abbreviations
+" =====================
+
+" VimProjGrep abbreviation for faster input. Bonus: no uppercase like user
+" defined command
+cnoreabbrev vpg VimProjGrep
 
 " VimProjSubstitute abbreviation for faster input. Bonus: no uppercase like user
 " defined command
