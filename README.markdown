@@ -1,15 +1,23 @@
 
-Vimproj.vim is Vim plugin to create a project.
+Automatic generation of tags file (Exhuberant Ctags)
 
+Description:
+============
 
-Installation and Usage
-----------------------
+This script look for .ctags file in the current
+directory hiearchy up to the root and build the tags file 
+when one is found. This process is executed only for the 
+first file opened in the whole directory tree. 
 
-Check out the [project site][] for installation instructions.
+Notes:
+======
 
-[project site]: http://github.com/okcompute/vimproj.vim
+- Combine this plugin and the AutoTags plugin and you won't
+need to think about generating tags anymore.
+- For further details on the .ctags file, see Exhuberant Ctags
+  documentations.
 
-License
--------
+Requirements:
+============
 
-GPLv2+
+Exhuberant Ctags must be installed on your system.
