@@ -107,5 +107,5 @@ endfunction
 
 augroup vimctags_bufread
     au!
-    au BufNewFile,BufRead *.vim,*.py,*.h,*.m,*.mm call s:VimCtagsBufRead()
+    au BufNewFile,BufRead * call s:VimCtagsBufRead()
 augroup END
