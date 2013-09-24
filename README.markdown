@@ -1,4 +1,4 @@
-NOTE: This plugin is obsolete. I personaly don't use it anymore. I have found a better way using git hooks to generate tags. I'm keeping the repository for the history.
+**NOTE**: This plugin is obsolete. I personaly don't use it anymore. I have found a better way using git hooks to generate tags. I'm keeping the repository for the history.
 
 Automatic generation of tags file (Exhuberant Ctags)
 
